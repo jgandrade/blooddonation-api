@@ -6,9 +6,9 @@ module.exports.createWebToken = (user) => {
         id: user.id,
         fullname: user.fullname,
         bloodtype: user.bloodtype,
-        isAdmin: user.isAdmin
+        isAdmin: user.isAdmin,
     };
-    return jwt.sign(data, secret, {});
+    return jwt.sign(data, secret, { expiresIn: "5s" });
 };
 module.exports.authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;

@@ -18,7 +18,11 @@ module.exports.login = (req, res) => {
                     isAdmin: result[0].isAdmin,
                 };
                 let accessToken = auth.createWebToken(createToken);
-                res.send({ accessToken: accessToken, response: true });
+                res.send({
+                    accessToken: accessToken,
+                    isAdmin: result[0].isAdmin,
+                    response: true,
+                });
             }
             else
                 res.send({ status: "Password incorrect", response: false });
@@ -47,7 +51,7 @@ module.exports.register = (req, res) => {
         }
     });
 };
-module.exports.verifyIsAdmin = (req, res) => {
+module.exports.verifySession = (req, res) => {
     let userData = auth.decode(req.headers.authorization);
     if (userData.isAdmin === 1)
         res.send({ response: true });

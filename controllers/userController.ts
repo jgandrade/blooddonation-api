@@ -23,7 +23,11 @@ module.exports.login = (req: any, res: any) => {
         };
 
         let accessToken = auth.createWebToken(createToken);
-        res.send({ accessToken: accessToken, response: true });
+        res.send({
+          accessToken: accessToken,
+          isAdmin: result[0].isAdmin,
+          response: true,
+        });
       } else res.send({ status: "Password incorrect", response: false });
     } else res.send({ status: "Username not found", response: false });
   });
@@ -55,7 +59,7 @@ module.exports.register = (req: any, res: any) => {
   });
 };
 
-module.exports.verifyIsAdmin = (req: any, res: any) => {
+module.exports.verifySession = (req: any, res: any) => {
   let userData = auth.decode(req.headers.authorization);
   if (userData.isAdmin === 1) res.send({ response: true });
   else res.send({ response: false });
