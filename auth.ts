@@ -9,7 +9,7 @@ module.exports.createWebToken = (user: any) => {
     isAdmin: user.isAdmin,
   };
 
-  return jwt.sign(data, secret, { expiresIn: "5s" });
+  return jwt.sign(data, secret, { expiresIn: "5m" });
 };
 
 module.exports.authenticateToken = (req: any, res: any, next: any) => {
