@@ -1,60 +1,58 @@
 "use strict";
-const db = require("../database");
-const auth = require("../auth");
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 const { v4: uuidv4 } = require("uuid");
+const { User, userInterface, getUser } = require("../model/user/user");
+const auth = require("../auth");
 const bcrypt = require("bcrypt");
-module.exports.login = (req, res) => {
-    let findUsername = `SELECT * FROM users where (username LIKE "${req.body.username}")`;
-    db.query(findUsername, (err, result) => {
-        if (err)
-            return res.send("An error has occured.");
-        if (result.length > 0) {
-            let isPasswordCorrect = bcrypt.compareSync(req.body.password, result[0].password);
-            if (isPasswordCorrect) {
-                let createToken = {
-                    id: result[0].id,
-                    fullname: result[0].fullname,
-                    bloodtype: result[0].bloodtype,
-                    isAdmin: result[0].isAdmin,
-                };
-                let accessToken = auth.createWebToken(createToken);
-                res.send({
-                    accessToken: accessToken,
-                    isAdmin: result[0].isAdmin,
-                    response: true,
-                });
-            }
-            else
-                res.send({ status: "Password incorrect", response: false });
-        }
-        else
-            res.send({ status: "Username not found", response: false });
-    });
-};
-module.exports.register = (req, res) => {
-    let userData = {
-        username: req.body.username,
+const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield getUser(req.body.username);
+    if (user === false) {
+        return res.send({ message: "Username not found", response: false });
+    }
+    let userToLogin = new User(...Object.values(user[0]));
+    const response = userToLogin.login(req.body.password);
+    res.send(response);
+});
+const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userData = {
         fullname: req.body.fullname,
+        username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 10),
-        age: req.body.age,
+        bloodType: req.body.bloodType,
         address: req.body.address,
-        bloodtype: req.body.bloodtype,
-        mobile: req.body.mobile,
+        contact_number: req.body.contact_number,
+        gender: req.body.gender,
+        age: req.body.age,
+        weight: req.body.weight,
+        height: req.body.height,
     };
-    let sql = `INSERT INTO users (id,username,fullname,password,age,address,bloodtype,mobile) VALUES ("${uuidv4()}", "${userData.username}","${userData.fullname}","${userData.password}",${userData.age},"${userData.address}","${userData.bloodtype}","${userData.mobile}")`;
-    db.query(sql, (err, result) => {
-        if (err) {
-            res.send({ status: "Duplicate Found", error: err, response: false });
-        }
-        else {
-            res.send({ status: "Successfully Registered", response: true });
-        }
-    });
-};
-module.exports.verifySession = (req, res) => {
+    const newUser = new User(uuidv4(), ...Object.values(userData));
+    const response = yield newUser.register();
+    if (response[0]) {
+        res.send({ response: true, message: response[1] });
+    }
+    else {
+        res.send({ response: false, message: response[1] });
+    }
+});
+const verifySession = (req, res) => {
     let userData = auth.decode(req.headers.authorization);
     if (userData.isAdmin === 1)
         res.send({ response: true });
     else
         res.send({ response: false });
+};
+module.exports = {
+    login,
+    register,
+    verifySession,
 };
